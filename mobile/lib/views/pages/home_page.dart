@@ -8,7 +8,6 @@ import "package:mobile/providers/navigation_provider.dart";
 import "package:mobile/theme.dart";
 import "package:mobile/views/widgets/appbar_widget.dart";
 import "package:mobile/views/widgets/custom_container_widget.dart";
-import "package:mobile/views/widgets/custom_text_field_widget.dart";
 import "package:mobile/views/widgets/image_source_dialogue_widget.dart";
 import "package:mobile/views/widgets/navigation_container_widget.dart";
 import "package:mobile/views/widgets/plant_details_dialogue_widget.dart";
@@ -276,28 +275,8 @@ class HomePage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 10.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(child: Divider(thickness: 1.0)),
-                            SizedBox(width: 5),
-                            Text(
-                              'OR DESCRIBE SYMPTOMS',
-                              style: AppTheme.labelMedium.copyWith(
-                                color: AppTheme.gray3,
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                            Expanded(child: Divider(thickness: 1.0)),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        CustomTextFieldWidget(
-                          liveSearch: false,
-                          //TODO: Implement the onSearch feature and make it required
-                          hinttext: 'E.g yellow leaves with brown spots',
-                        ),
+                       
+                        
                       ],
                     ),
                   ),

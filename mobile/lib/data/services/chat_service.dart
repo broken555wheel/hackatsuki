@@ -10,7 +10,7 @@ class ChatService {
   ChatService(this._authService);
 
   Future<Chat> createChat() async {
-    if(_authService.accessToken == null) {
+    if (_authService.accessToken == null) {
       throw Exception('Not authenticated - cannot create chat');
     }
 
@@ -22,19 +22,43 @@ class ChatService {
     }
   }
 
-  Future<List<Chat>> fetchChats() async {
-
+  Future<Map<String, dynamic>> fetchChats({int page = 1}) async {
     if (_authService.accessToken == null) {
-      throw Exception('Not authenticated - cannot fetch chats');
+      return {
+        'success': false,
+        'error': 'Not authenticated - cannot fetch chats',
+      };
     }
-    
-    final response = await _authService.get(ApiEndpoints.chats);
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      final data = List<Map<String, dynamic>>.from(body['chats']);
-      return data.map((json) => Chat.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to fetch chats: ${response.body}');
+
+    try {
+      final response = await _authService.get(
+        '${ApiEndpoints.chats}?page=$page',
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+        final dataList = List<Map<String, dynamic>>.from(body['chats'] ?? []);
+        final chats = dataList.map((json) => Chat.fromJson(json)).toList();
+
+        final int totalPages = body['total_pages'] ?? 1;
+        final int? nextPage = page < totalPages ? page + 1 : null;
+        final int? previousPage = page > 1 ? page - 1 : null;
+
+        return {
+          'success': true,
+          'chats': chats,
+          'nextPage': nextPage,
+          'previousPage': previousPage,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Failed to fetch chats: ${response.body}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Failed to fetch chats: $e'};
     }
   }
 }

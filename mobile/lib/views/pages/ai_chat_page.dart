@@ -20,6 +20,8 @@ class _AiChatPageState extends State<AiChatPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isInitialized = false;
 
+  MessageProvider? _messageProvider;
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +35,11 @@ class _AiChatPageState extends State<AiChatPage> {
     final messageProvider = context.read<MessageProvider>();
     final imageProvider = context.read<ImageProviderNotifier>();
 
+    _messageProvider = messageProvider;
+
     try {
       if (chatProvider.chats.isEmpty) {
-        await chatProvider.fetchChats();
+        await chatProvider.loadChats();
       }
 
       if (chatProvider.activeChat == null) {
@@ -66,6 +70,7 @@ class _AiChatPageState extends State<AiChatPage> {
     } catch (e) {
       print("Error initializing chat: $e");
     } finally {
+      _messageProvider?.addListener(_scrollListener);
       setState(() {
         _isInitialized = true;
       });
@@ -76,6 +81,7 @@ class _AiChatPageState extends State<AiChatPage> {
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
+    _messageProvider?.removeListener(_scrollListener);
     super.dispose();
   }
 
@@ -84,8 +90,7 @@ class _AiChatPageState extends State<AiChatPage> {
       print('DEBUG: Chat not initialized yet');
       return;
     }
-    ;
-
+  
     final imageProvider = context.read<ImageProviderNotifier>();
     final messageProvider = context.read<MessageProvider>();
     final text = _inputController.text.trim();
@@ -109,24 +114,17 @@ class _AiChatPageState extends State<AiChatPage> {
 
   void _scrollListener() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.easeOut,
-            );
-        }
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+        );
+      }
     });
-}
+  }
 
-@override
-void didChangeDependencies() {
-    super.didChangeDependencies();
-    
-    final messageProvider = context.watch<MessageProvider>();
-    messageProvider.addListener(_scrollListener);
-}
-
+  
   Widget _buildInputBar() {
     return Consumer2<ImageProviderNotifier, MessageProvider>(
       builder: (context, imageProvider, messageProvider, _) {

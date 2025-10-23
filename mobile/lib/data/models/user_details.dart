@@ -3,16 +3,18 @@ class UserDetails {
   final String lastName;
   final String email;
   final String phoneNumber;
+  final String city;
 
   const UserDetails({
     required this.firstName,
     required this.lastName,
     required this.email,
     required this.phoneNumber,
+    required this.city
   });
 
   factory UserDetails.empty() {
-    return UserDetails(firstName: "", lastName: "", email: "", phoneNumber: "");
+    return UserDetails(firstName: "", lastName: "", email: "", phoneNumber: "", city: "");
   }
 
   factory UserDetails.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class UserDetails {
       lastName: json['last_name'] ?? '',
       email: json['email'] ?? '',
       phoneNumber: json['phone_number'] ?? '',
+      city: json['city'] ?? '',
     );
   }
 
@@ -30,6 +33,7 @@ class UserDetails {
       "lastName": lastName,
       "email": email,
       "phoneNumber": phoneNumber,
+      "city" : city
     };
   }
 
@@ -38,12 +42,14 @@ class UserDetails {
     String? lastName,
     String? email,
     String? phoneNumber,
+    String? city
   }) {
     return UserDetails(
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      city: city ?? this.city
     );
   }
 }

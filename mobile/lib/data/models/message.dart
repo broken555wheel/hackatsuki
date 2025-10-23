@@ -26,7 +26,7 @@ class Message {
 
   static String _cleanUserPrompt(String fullContent) {
     final imageRegex = RegExp(
-      r'Image:\s*[\w\.-]+\s*\([^)]+\)\s*(\n)?',
+      r'Image:\s*:[\w\./-]+\.jpg\s*\([^)]+\)\s*(\n)?',
       caseSensitive: false,
     );
     final detailsRegex = RegExp(
@@ -44,21 +44,21 @@ class Message {
     cleanedText = cleanedText.replaceAll(promptPrefixRegex, '');
 
     cleanedText = cleanedText.trim();
+    print(cleanedText);
 
     return cleanedText.isEmpty ? "Image Sent" : cleanedText;
   }
 
   static String? _extractImageUrl(String content) {
     final regex = RegExp(
-      r'Image: ([\w\.-]+)\s*\((?:size|prompt):',
+      r'Image: (:[\w\./-]+\.jpg)\s*\((?:size|prompt):',
       caseSensitive: false,
     );
     final match = regex.firstMatch(content);
 
     if (match != null && match.groupCount >= 1) {
       final filename = match.group(1);
-
-      return 'http://127.0.0.1:8080/$filename';
+      return 'http://127.0.0.1$filename';
     }
     return null;
   }

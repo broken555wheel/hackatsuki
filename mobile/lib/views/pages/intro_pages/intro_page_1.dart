@@ -25,6 +25,27 @@ class _IntroPage1State extends State<IntroPage1> {
     super.dispose();
   }
 
+  void _handlePhoneValidationAndSave() {
+    final phone = _phoneController.text.trim();
+    final phoneRegEx = RegExp(r'^\+?\d{9,15}$');
+
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please enter your phone number')));
+      return;
+    }
+
+    if (!phoneRegEx.hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid phone number')),
+      );
+      return;
+    }
+
+    context.read<AuthProvider>().savePhoneNumber(phone);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -82,10 +103,13 @@ class _IntroPage1State extends State<IntroPage1> {
 
             OnboardingButtonWidget(
               onTap: () async {
-                try {
-                  await context.read<AuthProvider>().loginWithGoogle();
-                } catch (e) {
-                  print('Google login failed: $e');
+                _handlePhoneValidationAndSave();
+                if (context.read<AuthProvider>().tempPhoneNumber != null) {
+                  try {
+                    await context.read<AuthProvider>().loginWithGoogle();
+                  } catch (e) {
+                    print('Google login failed: $e');
+                  }
                 }
               },
               imageString: 'assets/images/google-color-svgrepo-com.svg',
@@ -118,7 +142,7 @@ class _IntroPage1State extends State<IntroPage1> {
                 }
 
                 context.read<AuthProvider>().savePhoneNumber(phone);
-
+                print(' phone $phone');
                 widget.pageController.nextPage(
                   duration: Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -140,13 +164,13 @@ class _IntroPage1State extends State<IntroPage1> {
                 SizedBox(width: 8.0),
                 GestureDetector(
                   onTap: () async {
-                    await context.read<AuthProvider>().markOnboardingCompleted();
-
-                    if (mounted) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => LoginPage()),
-                      );
-                    }
+                    _handlePhoneValidationAndSave();
+                    if (context.read<AuthProvider>().tempPhoneNumber != null) {
+      widget.pageController.nextPage(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
                   },
                   child: Text(
                     'sign in',

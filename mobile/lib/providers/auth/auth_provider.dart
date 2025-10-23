@@ -22,6 +22,7 @@ class AuthProvider extends ChangeNotifier {
   UserDetails? get user => _user;
   bool get isLoggedIn => _user != null;
   bool get isLoading => _isLoading;
+  String? get tempPhoneNumber => _tempPhoneNumber;
 
   void savePhoneNumber(String? phoneNumber) {
     _tempPhoneNumber = phoneNumber;
@@ -51,10 +52,11 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _saveUser(UserDetails user) async {
     final mergedUser = user.copyWith(
       phoneNumber: _tempPhoneNumber ?? user.phoneNumber,
+      city: user.city
     );
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user', jsonEncode(user.toJson()));
+    await prefs.setString('user', jsonEncode(mergedUser.toJson()));
 
     if (_authService.accessToken != null) {
       await _storage.write(key: 'accessToken', value: _authService.accessToken);
@@ -128,6 +130,47 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateUserLocationAndPhoneNumber(String city) async {
+    print('from provider ${_user!.phoneNumber}');
+    if (_user==null||_user!.phoneNumber == null) {
+      throw Exception('User not logged in or phone number not saved');
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final updatedUser = await _authService.updateUserProfile(
+        city: city,
+        phoneNumber: _user!.phoneNumber,
+      );
+
+      await _saveUser(updatedUser);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<UserDetails> fetchAndCacheCurrentUser() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = await _authService.getCurrentUser();
+      
+      _user = user; 
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user', jsonEncode(user.toJson())); 
+
+      return user;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+}
 
   Future<void> refreshToken() async {
     try {

@@ -50,6 +50,7 @@ class AuthService {
         lastName: lastName,
         email: email,
         phoneNumber: "",
+        city: "",
       );
     } else {
       throw Exception('Signup failed: ${response.statusCode} ${response.body}');
@@ -126,6 +127,42 @@ class AuthService {
     }
   }
 
+  Future<UserDetails> updateUserProfile({
+    required String city,
+    required String phoneNumber,
+  }) async {
+    final response = await patch('$baseUrl/users/', {
+      'city': city,
+      'phone_number': phoneNumber,
+    });
+
+    if (response.statusCode == 200) {
+      return UserDetails(
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: phoneNumber,
+        city: city,
+      );
+    } else {
+      String errorMessage = 'Unknown error occurred';
+      String errorBody = jsonDecode(response.body);
+      errorMessage = errorBody[1];
+      throw Exception('Failed to update user profile: $errorMessage');
+    }
+  }
+
+  Future<UserDetails> getCurrentUser() async {
+    final response = await get('$baseUrl/users/me'); 
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return UserDetails.fromJson(data);
+    } else {
+      throw Exception('Failed to fetch user details: ${response.body}');
+    }
+}
+
   // Authenticated GET
   Future<http.Response> get(String endpoint) async {
     if (_accessToken == null) {
@@ -143,6 +180,24 @@ class AuthService {
       throw Exception("Not authenticated");
     }
     return await http.post(
+      Uri.parse(endpoint),
+      headers: {
+        "Authorization": "Bearer $_accessToken",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(body),
+    );
+  }
+
+  //AUthenticated patch
+  Future<http.Response> patch(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    if (_accessToken == null) {
+      throw Exception("Not authenticated");
+    }
+    return await http.patch(
       Uri.parse(endpoint),
       headers: {
         "Authorization": "Bearer $_accessToken",

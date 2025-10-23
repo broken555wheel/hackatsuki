@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/providers/auth/auth_provider.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
 import 'package:mobile/views/widgets/text_input_widget.dart';
+import 'package:provider/provider.dart';
 
 class IntroPage3 extends StatefulWidget {
   const IntroPage3({super.key, required this.pageController});
@@ -23,6 +25,7 @@ class _IntroPage1State extends State<IntroPage3> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return Container(
       decoration: BoxDecoration(color: AppTheme.green3),
       child: SingleChildScrollView(
@@ -47,7 +50,7 @@ class _IntroPage1State extends State<IntroPage3> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Enter your city or region",
+                    "Enter your city",
                     style: AppTheme.labelMedium.copyWith(color: AppTheme.white),
                   ),
                   TextInputWidget(
@@ -59,11 +62,30 @@ class _IntroPage1State extends State<IntroPage3> {
               ),
             ),
             SizedBox(height: 32.0),
-        
-           
+
             SizedBox(height: 8.0),
             OnboardingButtonWidget(
-              onTap: () => widget.pageController.nextPage(duration: Duration(milliseconds: 300), curve: Curves.easeInOut),
+              onTap: () async {
+                final city = _locationController.text.trim();
+          if (city.isNotEmpty) {
+            try {
+              await authProvider.updateUserLocationAndPhoneNumber(city);
+              widget.pageController.nextPage(
+                duration: Duration(milliseconds: 300), 
+                curve: Curves.easeInOut
+              );
+            } catch (e) {
+              print('Error updating profile: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to save location. Please try again.')),
+              );
+            }
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please enter your city.')),
+              );
+          }
+              },
               buttonText: 'Continue',
               color: AppTheme.white,
               borderColor: AppTheme.white,

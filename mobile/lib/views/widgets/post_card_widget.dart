@@ -165,7 +165,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           if (widget.post.description.isNotEmpty)
             Text(
               widget.post.description,
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.black),
               maxLines: _isExplanded ? null : PostCardWidget.maxLinesCollapsed,
               overflow: _isExplanded ? TextOverflow.clip : TextOverflow.ellipsis,
             ),
