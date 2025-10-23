@@ -61,7 +61,8 @@ class _CommunityPageState extends State<CommunityPage> {
     final commentProvider = context.read<CommentProvider>();
     final postProvider = context.read<PostProvider>();
     final result = await commentProvider.addComment(
-      postId: postId,
+      type: EntityType.post,
+      entityId: postId,
       content: content,
       parentCommentId: parentCommentId,
     );
@@ -90,7 +91,7 @@ class _CommunityPageState extends State<CommunityPage> {
   void _handleLoadReplies(String postId, int commentId) async {
     final commentProvider = context.read<CommentProvider>();
 
-    await commentProvider.loadCommentReplies(postId, commentId);
+    await commentProvider.loadCommentReplies(EntityType.post, postId, commentId);
   }
 
   void _handleDeletePost(String postId) async {

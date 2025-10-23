@@ -5,7 +5,7 @@ import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/comment_section_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 
-class PostCardWidget extends StatelessWidget {
+class PostCardWidget extends StatefulWidget {
   final Post post;
   final List<Comment> comments;
   final VoidCallback? onSeeMoreComments;
@@ -16,6 +16,8 @@ class PostCardWidget extends StatelessWidget {
   final bool showComments;
   final VoidCallback? onDelete;
   final int? currentUserId;
+
+  static const int maxLinesCollapsed = 4;
 
   const PostCardWidget({
     super.key,
@@ -57,7 +59,20 @@ class PostCardWidget extends StatelessWidget {
   }
 
   @override
+  State<PostCardWidget> createState() => _PostCardWidgetState();
+}
+
+class _PostCardWidgetState extends State<PostCardWidget> {
+  bool _isExplanded = false;
+  void _toggleExpanded() {
+    setState(() {
+      _isExplanded = !_isExplanded;
+    });
+  }
+  @override
   Widget build(BuildContext context) {
+    final bool isContentOverFlowing =
+        widget.post.description.length > (PostCardWidget.maxLinesCollapsed * 50);
     return CustomContainerWidget(
       color: AppTheme.white,
       horizontalPadding: 8.0,
@@ -76,7 +91,7 @@ class PostCardWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${post.user?.firstName ?? 'Unknown'} ${post.user?.lastName ?? 'User'}',
+                        '${widget.post.user?.firstName ?? 'Unknown'} ${widget.post.user?.lastName ?? 'User'}',
                         style: AppTheme.labelMedium.copyWith(
                           color: AppTheme.buttonTextColor,
                         ),
@@ -91,36 +106,37 @@ class PostCardWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              if (post.crop != null && post.crop!.isNotEmpty)
+              if (widget.post.crop != null && widget.post.crop!.isNotEmpty)
                 CustomContainerWidget(
                   color: AppTheme.green1,
                   horizontalPadding: 8,
                   verticalPadding: 4,
                   child: Text(
-                    post.crop!,
+                    widget.post.crop!,
                     style: AppTheme.labelSmall.copyWith(color: AppTheme.white),
                   ),
                 ),
-                if (currentUserId != null && currentUserId == post.user?.id)
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: onDelete,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
+              if (widget.currentUserId != null &&
+                  widget.currentUserId == widget.post.user?.id)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: widget.onDelete,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
             ],
           ),
           SizedBox(height: 8.0),
           Text(
-            post.question,
+            widget.post.question,
             style: AppTheme.labelLarge.copyWith(color: AppTheme.black),
           ),
           SizedBox(height: 8.0),
-          if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+          if (widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.network(
-                post.imageUrl!,
+                widget.post.imageUrl!,
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -145,32 +161,38 @@ class PostCardWidget extends StatelessWidget {
                 },
               ),
             ),
-            SizedBox(height: 8.0),
-          if (post.description.isNotEmpty)
-            Text(
-              post.description,
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
-            ),
           SizedBox(height: 8.0),
-          
-          
+          if (widget.post.description.isNotEmpty)
+            Text(
+              widget.post.description,
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
+              maxLines: _isExplanded ? null : PostCardWidget.maxLinesCollapsed,
+              overflow: _isExplanded ? TextOverflow.clip : TextOverflow.ellipsis,
+            ),
+            if (isContentOverFlowing) 
+          GestureDetector(
+            onTap: _toggleExpanded,
+            child: Padding(padding: const EdgeInsets.only(top: 4),child: Text(_isExplanded ? 'Show Less' : 'Read more', style: AppTheme.labelMedium.copyWith(color: AppTheme.green3),),),
+          ),
+          SizedBox(height: 8.0),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildLikeButton(),
               _postDetails(
                 icon: Icons.message,
-                accompanyingText: '${post.commentsCount ?? 0}',
-                onTap: onComment,
+                accompanyingText: '${widget.post.commentsCount ?? 0}',
+                onTap: widget.onComment,
               ),
               _postDetails(icon: Icons.share, accompanyingText: "Share"),
             ],
           ),
-          if (showComments)
+          if (widget.showComments)
             CommentsSectionWidget(
-              comments: comments,
-              onAddComment: onAddComment,
-              onLoadReplies: onLoadReplies,
+              comments: widget.comments,
+              onAddComment: widget.onAddComment,
+              onLoadReplies: widget.onLoadReplies,
             ),
         ],
       ),
@@ -183,10 +205,10 @@ class PostCardWidget extends StatelessWidget {
   }
 
   Widget _buildLikeButton() {
-    final bool isLiked = post.isLikedByCurrentUser == true;
+    final bool isLiked = widget.post.isLikedByCurrentUser == true;
 
     return GestureDetector(
-      onTap: onLike,
+      onTap: widget.onLike,
       child: Row(
         children: [
           Icon(
@@ -195,7 +217,7 @@ class PostCardWidget extends StatelessWidget {
           ),
           SizedBox(width: 4.0),
           Text(
-            '${post.likesCount ?? 0}',
+            '${widget.post.likesCount ?? 0}',
             style: AppTheme.labelSmall.copyWith(
               color: isLiked ? Colors.red : AppTheme.gray2,
             ),

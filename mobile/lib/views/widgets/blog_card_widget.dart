@@ -1,20 +1,20 @@
-
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/blog.dart';
-import 'package:mobile/data/models/blog_comment.dart';
 import 'package:mobile/data/models/comment.dart';
 import 'package:mobile/theme.dart';
-import 'package:mobile/views/widgets/comment_section_widget.dart'; // Reusing Post CommentsSectionWidget
+import 'package:mobile/views/widgets/comment_section_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 
-class BlogCardWidget extends StatelessWidget {
+class BlogCardWidget extends StatefulWidget {
   final Blog blog;
-  final List<BlogComment> comments;
+  final List<Comment> comments;
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final Function(String, int?) onAddComment;
   final Function(int) onLoadReplies;
   final bool showComments;
+
+  static const int maxLinesCollapsed = 4;
 
   const BlogCardWidget({
     super.key,
@@ -29,7 +29,7 @@ class BlogCardWidget extends StatelessWidget {
 
   factory BlogCardWidget.fromBlog({
     required Blog blog,
-    required List<BlogComment> comments,
+    required List<Comment> comments,
     VoidCallback? onLike,
     VoidCallback? onComment,
     required Function(String, int?) onAddComment,
@@ -48,7 +48,22 @@ class BlogCardWidget extends StatelessWidget {
   }
 
   @override
+  State<BlogCardWidget> createState() => _BlogCardWidgetState();
+}
+
+class _BlogCardWidgetState extends State<BlogCardWidget> {
+  bool _isExplanded = false;
+  void _toggleExpanded() {
+    setState(() {
+      _isExplanded = !_isExplanded;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isContentOverFlowing =
+        widget.blog.content.length > (BlogCardWidget.maxLinesCollapsed * 50);
+
     return CustomContainerWidget(
       color: AppTheme.white,
       horizontalPadding: 8.0,
@@ -67,13 +82,13 @@ class BlogCardWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${blog.user?.firstName ?? 'Unknown'} ${blog.user?.lastName ?? 'User'}',
+                        '${widget.blog.user?.firstName ?? 'Unknown'} ${widget.blog.user?.lastName ?? 'User'}',
                         style: AppTheme.labelMedium.copyWith(
                           color: AppTheme.buttonTextColor,
                         ),
                       ),
                       Text(
-                        'Posted 2 hours ago',
+                        widget.blog.formattedTime,
                         style: AppTheme.labelSmall.copyWith(
                           color: AppTheme.gray2,
                         ),
@@ -86,15 +101,20 @@ class BlogCardWidget extends StatelessWidget {
           ),
           SizedBox(height: 8.0),
           Text(
-            blog.title,
+            widget.blog.title,
             style: AppTheme.headingSmall.copyWith(color: AppTheme.green1),
           ),
           SizedBox(height: 8.0),
           Text(
-            blog.content,
+            widget.blog.content,
             style: AppTheme.bodyMedium.copyWith(color: AppTheme.black),
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
+            maxLines: _isExplanded ? null : BlogCardWidget.maxLinesCollapsed,
+            overflow: _isExplanded ? TextOverflow.clip : TextOverflow.ellipsis,
+          ),
+          if (isContentOverFlowing) 
+          GestureDetector(
+            onTap: _toggleExpanded,
+            child: Padding(padding: const EdgeInsets.only(top: 4),child: Text(_isExplanded ? 'Show Less' : 'Read more', style: AppTheme.labelMedium.copyWith(color: AppTheme.green3),),),
           ),
           SizedBox(height: 8.0),
           Row(
@@ -103,17 +123,17 @@ class BlogCardWidget extends StatelessWidget {
               _buildLikeButton(),
               _postDetails(
                 icon: Icons.message,
-                accompanyingText: '${blog.commentsCount ?? 0}',
-                onTap: onComment,
+                accompanyingText: '${widget.blog.commentsCount ?? 0}',
+                onTap: widget.onComment,
               ),
               _postDetails(icon: Icons.share, accompanyingText: "Share"),
             ],
           ),
-          if (showComments)
-             CommentsSectionWidget(
-              comments: comments.cast<Comment>(), 
-              onAddComment: onAddComment,
-              onLoadReplies: onLoadReplies,
+          if (widget.showComments)
+            CommentsSectionWidget(
+              comments: widget.comments,
+              onAddComment: widget.onAddComment,
+              onLoadReplies: widget.onLoadReplies,
             ),
         ],
       ),
@@ -131,12 +151,12 @@ class BlogCardWidget extends StatelessWidget {
       child: Icon(Icons.person, size: 20, color: AppTheme.gray3),
     );
   }
-  
+
   Widget _buildLikeButton() {
-    final bool isLiked = blog.isLikedByCurrentUser == true;
+    final bool isLiked = widget.blog.isLikedByCurrentUser == true;
 
     return GestureDetector(
-      onTap: onLike,
+      onTap: widget.onLike,
       child: Row(
         children: [
           Icon(
@@ -145,7 +165,7 @@ class BlogCardWidget extends StatelessWidget {
           ),
           SizedBox(width: 4.0),
           Text(
-            '${blog.likesCount ?? 0}',
+            '${widget.blog.likesCount ?? 0}',
             style: AppTheme.labelSmall.copyWith(
               color: isLiked ? Colors.red : AppTheme.gray2,
             ),

@@ -22,7 +22,7 @@ class BlogProvider with ChangeNotifier {
 
   Future<void> loadBlogs({bool refresh = false}) async {
     if (_isLoading) return;
-    
+
     if (refresh) {
       _currentPage = 1;
       _hasMoreBlogs = true;
@@ -90,11 +90,12 @@ class BlogProvider with ChangeNotifier {
         likesCount: (blog.likesCount ?? 0) + change,
         user: blog.user,
         isLikedByCurrentUser: newIsLiked,
+        createdAt: blog.createdAt,
       );
       notifyListeners();
     }
   }
-  
+
   void updateBlogCommentsCount(String blogId, int change) {
     final index = _blogs.indexWhere((blog) => blog.id.toString() == blogId);
     if (index != -1) {
@@ -107,6 +108,7 @@ class BlogProvider with ChangeNotifier {
         likesCount: blog.likesCount,
         user: blog.user,
         isLikedByCurrentUser: blog.isLikedByCurrentUser,
+        createdAt: blog.createdAt,
       );
       notifyListeners();
     }

@@ -1,4 +1,5 @@
-import 'package:mobile/data/models/user.dart'; 
+import 'package:mobile/data/models/user.dart';
+import 'package:mobile/data/utils/time_utils.dart';
 
 class Blog {
   final int? id;
@@ -8,6 +9,7 @@ class Blog {
   final int? likesCount;
   final User? user;
   final bool? isLikedByCurrentUser;
+  final String createdAt;
 
   Blog({
     this.id,
@@ -17,6 +19,7 @@ class Blog {
     this.likesCount,
     this.user,
     this.isLikedByCurrentUser,
+    required this.createdAt,
   });
 
   factory Blog.fromJson(Map<String, dynamic> json) {
@@ -28,6 +31,17 @@ class Blog {
       likesCount: json['likes_count'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       isLikedByCurrentUser: json['is_liked'] as bool?,
+      createdAt: json['created_at'] as String,
     );
+  }
+
+  String get formattedTime {
+    try {
+      final dateTime = DateTime.parse(createdAt!).toLocal();
+      return formatRelativeTime(dateTime);
+    } catch (e) {
+      print(e);
+      return 'Some time ago';
+    }
   }
 }

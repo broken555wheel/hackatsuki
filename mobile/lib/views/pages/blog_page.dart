@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/blog.dart';
-import 'package:mobile/data/models/blog_comment.dart';
-import 'package:mobile/providers/blog_comment_provider.dart';
 import 'package:mobile/providers/blog_provider.dart';
+import 'package:mobile/providers/comment_provider.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/appbar_widget.dart';
 import 'package:mobile/views/widgets/blog_card_widget.dart';
@@ -46,8 +45,7 @@ class _BlogPageState extends State<BlogPage> {
     });
 
     if (isExpanding) {
-      // Assuming loadBlogComments is implemented in BlogCommentProvider
-      context.read<BlogCommentProvider>().loadBlogComments(blogId);
+      context.read<CommentProvider>().loadBlogComments(blogId);
     }
   }
 
@@ -56,11 +54,12 @@ class _BlogPageState extends State<BlogPage> {
     String content,
     int? parentCommentId,
   ) async {
-    final commentProvider = context.read<BlogCommentProvider>();
+    final commentProvider = context.read<CommentProvider>();
     final blogProvider = context.read<BlogProvider>();
     
     final result = await commentProvider.addComment(
-      blogId: blogId,
+      type: EntityType.blog,
+      entityId: blogId,
       content: content,
       parentCommentId: parentCommentId,
     );
@@ -86,8 +85,8 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   void _handleLoadReplies(String blogId, int commentId) async {
-    final commentProvider = context.read<BlogCommentProvider>();
-    await commentProvider.loadCommentReplies(blogId, commentId);
+    final commentProvider = context.read<CommentProvider>();
+    await commentProvider.loadCommentReplies(EntityType.blog,blogId, commentId);
   }
 
   Widget _buildBlogListContent() {
@@ -130,10 +129,10 @@ class _BlogPageState extends State<BlogPage> {
             }
 
             final blog = blogProvider.blogs[index];
-            final commentProvider = context.watch<BlogCommentProvider>();
+            final commentProvider = context.watch<CommentProvider>();
             final blogComments = commentProvider.getBlogComments(
               blog.id.toString(),
-            ).cast<BlogComment>(); 
+            ); 
             return Padding(
               padding: EdgeInsets.only(bottom: 16),
               child: BlogCardWidget.fromBlog(

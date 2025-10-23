@@ -1,8 +1,6 @@
-// data/services/blog_service.dart
-
 import 'dart:convert';
 import 'package:mobile/data/models/blog.dart';
-import 'package:mobile/data/models/blog_comment.dart'; 
+import 'package:mobile/data/models/comment.dart';
 import 'package:mobile/data/services/auth/auth_service.dart';
 import 'package:mobile/data/utils.dart';
 
@@ -19,13 +17,17 @@ class BlogService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final int totalPages = data['total_pages'] ?? 1;
+
+        final int? nextPage = page < totalPages ? page + 1 : null;
+        final int? previousPage = page > 1 ? page - 1 : null;
         return {
           'success': true,
           'blogs': (data['blogs'] as List)
               .map((blog) => Blog.fromJson(blog))
               .toList(),
-          'nextPage': data['next'] != null ? page + 1 : null,
-          'previousPage': data['previous'] != null ? page - 1 : null,
+          'nextPage': nextPage,
+          'previousPage': previousPage,
         };
       } else {
         return {
@@ -42,9 +44,9 @@ class BlogService {
     try {
       final response = await _authService.post(
         ApiEndpoints.toggleBlogLike(blogId),
-        {}, 
+        {},
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 204) {
         return {'success': true};
       } else {
@@ -77,10 +79,7 @@ class BlogService {
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
-        return {
-          'success': true, 
-          'comment': BlogComment.fromJson(data),
-        };
+        return {'success': true, 'comment': data};
       } else {
         return {
           'success': false,
@@ -92,7 +91,10 @@ class BlogService {
     }
   }
 
-  Future<Map<String, dynamic>> getCommentsForBlog(String blogId, {int page = 1}) async {
+  Future<Map<String, dynamic>> getCommentsForBlog(
+    String blogId, {
+    int page = 1,
+  }) async {
     try {
       final response = await _authService.get(
         '${ApiEndpoints.getBlogComments(blogId)}?page=$page',
@@ -100,17 +102,23 @@ class BlogService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final comments = (data['results'] as List)
+        final comments = (data['comments'] as List)
             .map(
-              (commentJson) => BlogComment.fromJson(commentJson as Map<String, dynamic>),
+              (commentJson) =>
+                  Comment.fromJson(commentJson as Map<String, dynamic>),
             )
             .toList();
+
+        final int totalPages = data['total_pages'] ?? 1;
+
+        final int? nextPage = page < totalPages ? page + 1 : null;
+        final int? previousPage = page > 1 ? page - 1 : null;
 
         return {
           'success': true,
           'comments': comments,
-          'nextPage': data['next'] != null ? page + 1 : null,
-          'previousPage': data['previous'] != null ? page - 1 : null,
+          'nextPage': nextPage,
+          'previousPage': previousPage,
         };
       } else {
         return {
@@ -123,7 +131,10 @@ class BlogService {
     }
   }
 
-  Future<Map<String, dynamic>> getCommentRepliesById(String commentId, {int page = 1}) async {
+  Future<Map<String, dynamic>> getCommentRepliesById(
+    String commentId, {
+    int page = 1,
+  }) async {
     try {
       final response = await _authService.get(
         '${ApiEndpoints.getBlogCommentReplies(commentId)}?page=$page',
@@ -131,10 +142,10 @@ class BlogService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final replies = (data['results'] as List)
-            .map((replyJson) => BlogComment.fromJson(replyJson))
+        final replies = (data['comments'] as List)
+            .map((replyJson) => Comment.fromJson(replyJson))
             .toList();
-            
+
         return {
           'success': true,
           'replies': replies,

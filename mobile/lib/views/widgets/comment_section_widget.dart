@@ -5,8 +5,8 @@ import 'package:mobile/views/widgets/custom_container_widget.dart';
 
 class CommentsSectionWidget extends StatefulWidget {
   final List<Comment> comments;
-  final Function(String, int?) onAddComment; 
-  final Function(int) onLoadReplies; 
+  final Function(String, int?) onAddComment;
+  final Function(int) onLoadReplies;
 
   const CommentsSectionWidget({
     super.key,
@@ -21,12 +21,14 @@ class CommentsSectionWidget extends StatefulWidget {
 
 class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
   final _commentController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
   int? _replyingToCommentId;
   String _replyingToAuthor = '';
 
   @override
   void dispose() {
     _commentController.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
   }
 
@@ -36,6 +38,8 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
       _replyingToAuthor = comment.authorName;
       _commentController.clear();
     });
+
+    _commentFocusNode.requestFocus();
   }
 
   void _cancelReply() {
@@ -44,6 +48,7 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
       _replyingToAuthor = '';
       _commentController.clear();
     });
+    _commentFocusNode.unfocus();
   }
 
   void _submitComment() {
@@ -96,13 +101,19 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
               Expanded(
                 child: TextField(
                   controller: _commentController,
+                  focusNode: _commentFocusNode,
                   decoration: InputDecoration(
-                    hintText: _replyingToCommentId != null 
-                        ? 'Write your reply...' 
+                    hintText: _replyingToCommentId != null
+                        ? 'Write your reply...'
                         : 'Write a comment...',
-                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
+                    hintStyle: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.gray3,
+                    ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   maxLines: 3,
                   minLines: 1,
@@ -120,8 +131,10 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
   }
 
   Widget _buildCommentsList() {
-    final topLevelComments = widget.comments.where((c) => c.parentCommentId == null).toList();
-    
+    final topLevelComments = widget.comments
+        .where((c) => c.parentCommentId == null)
+        .toList();
+
     return ListView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
@@ -133,123 +146,120 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
   }
 
   Widget _buildCommentItem(Comment comment, int depth) {
-  final hasReplies = comment.replies.isNotEmpty || (comment.repliesCount ?? 0) > 0;
-  final isTopLevel = depth == 0;
+    final hasReplies =
+        comment.replies.isNotEmpty || (comment.repliesCount ?? 0) > 0;
+    final isTopLevel = depth == 0;
 
-  return Container(
-    margin: EdgeInsets.only(
-      left: isTopLevel ? 0 : 16.0 * depth,
-      bottom: 8,
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomContainerWidget(
-          color: isTopLevel ? AppTheme.white : AppTheme.lightGreen1,
-          horizontalPadding: 12,
-          verticalPadding: 4,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDefaultAvatar(),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              comment.authorName,
-                              style: AppTheme.labelMedium.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              comment.timePosted,
-                              style: AppTheme.labelSmall.copyWith(
-                                color: AppTheme.gray2,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          comment.content,
-                          style: AppTheme.bodySmall,
-                        ),
-                        SizedBox(height: 4),
-                        Row(
-                          children: [
-                            TextButton(
-                              onPressed: () => _startReply(comment),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                              ),
-                              child: Text(
-                                'Reply',
-                                style: AppTheme.labelSmall.copyWith(
-                                  color: AppTheme.green3,
+    return Container(
+      margin: EdgeInsets.only(left: isTopLevel ? 0 : 16.0 * depth, bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CustomContainerWidget(
+            color: isTopLevel ? AppTheme.white : AppTheme.lightGreen1,
+            horizontalPadding: 12,
+            verticalPadding: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDefaultAvatar(),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                comment.authorName,
+                                style: AppTheme.labelMedium.copyWith(
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                            if (hasReplies) ...[
-                              SizedBox(width: 16),
-                              _buildViewRepliesButton(comment),
+                              SizedBox(width: 8),
+                              Text(
+                                comment.formattedTime,
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.gray2,
+                                ),
+                              ),
                             ],
-                          ],
-                        ),
-                      ],
+                          ),
+                          SizedBox(height: 4),
+                          Text(comment.content, style: AppTheme.bodySmall),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: () => _startReply(comment),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                ),
+                                child: Text(
+                                  'Reply',
+                                  style: AppTheme.labelSmall.copyWith(
+                                    color: AppTheme.green3,
+                                  ),
+                                ),
+                              ),
+                              if (hasReplies) ...[
+                                SizedBox(width: 16),
+                                _buildViewRepliesButton(comment),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        if (comment.replies.isNotEmpty) ...[
-          SizedBox(height: 8),
-          ...comment.replies.map((reply) => _buildCommentItem(reply, depth + 1)),
+          if (comment.replies.isNotEmpty) ...[
+            SizedBox(height: 8),
+            ...comment.replies.map(
+              (reply) => _buildCommentItem(reply, depth + 1),
+            ),
+          ],
         ],
-      ],
-    ),
-  );
-}
-
-Widget _buildViewRepliesButton(Comment comment) {
-  final hasLoadedReplies = comment.replies.isNotEmpty;
-  final totalReplies = comment.repliesCount ?? 0;
-
-  if (hasLoadedReplies && comment.replies.length >= totalReplies) {
-    return SizedBox.shrink();  
+      ),
+    );
   }
 
-  return TextButton(
-    onPressed: () {
-      if (comment.id != null) {
-        widget.onLoadReplies(comment.id!);
-      }
-    },
-    style: TextButton.styleFrom(
-      padding: EdgeInsets.zero,
-      minimumSize: Size.zero,
-    ),
-    child: Text(
-      hasLoadedReplies 
-          ? 'View ${totalReplies - comment.replies.length} more replies'
-          : 'View $totalReplies ${totalReplies == 1 ? 'reply' : 'replies'}',
-      style: AppTheme.labelSmall.copyWith(
-        color: AppTheme.green3,
-        fontStyle: FontStyle.italic,
+  Widget _buildViewRepliesButton(Comment comment) {
+    final hasLoadedReplies = comment.replies.isNotEmpty;
+    final totalReplies = comment.repliesCount ?? 0;
+
+    if (hasLoadedReplies && comment.replies.length >= totalReplies) {
+      return SizedBox.shrink();
+    }
+
+    return TextButton(
+      onPressed: () {
+        if (comment.id != null) {
+          widget.onLoadReplies(comment.id!);
+        }
+      },
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
       ),
-    ),
-  );
-}
+      child: Text(
+        hasLoadedReplies
+            ? 'View ${totalReplies - comment.replies.length} more replies'
+            : 'View $totalReplies ${totalReplies == 1 ? 'reply' : 'replies'}',
+        style: AppTheme.labelSmall.copyWith(
+          color: AppTheme.green3,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
 
   Widget _buildDefaultAvatar() {
     return Container(

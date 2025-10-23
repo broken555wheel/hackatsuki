@@ -21,8 +21,8 @@ class PostService {
         final data = json.decode(response.body);
         final int totalPages = data['total_pages'] ?? 1;
 
-        final int? nextPage = page < totalPages ? page+1 : null;
-        final int? previousPage = page > 1 ? page -1 : null;
+        final int? nextPage = page < totalPages ? page + 1 : null;
+        final int? previousPage = page > 1 ? page - 1 : null;
         return {
           'success': true,
           'posts': (data['posts'] as List)
@@ -166,11 +166,16 @@ class PostService {
             )
             .toList();
 
+        final int totalPages = data['total_pages'] ?? 1;
+
+        final int? nextPage = page < totalPages ? page + 1 : null;
+        final int? previousPage = page > 1 ? page - 1 : null;
+
         return {
           'success': true,
           'comments': comments,
-          'nextPage': data['next'] != null ? page + 1 : null,
-          'previousPage': data['previous'] != null ? page - 1 : null,
+          'nextPage': nextPage,
+          'previousPage': previousPage,
         };
       } else {
         return {
@@ -213,11 +218,9 @@ class PostService {
 
   Future<Map<String, dynamic>> deletePost(String postId) async {
     try {
-      // Assuming _authService.post handles the POST request with the Authorization header.
-      // This is used even for deletion as per your requirement.
       final response = await _authService.post(
         ApiEndpoints.deletePost(postId),
-        {}, // Empty body for the POST request
+        {}, 
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
